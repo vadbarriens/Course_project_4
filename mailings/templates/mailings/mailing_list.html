@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+{% block title %}Список рассылок{% endblock %}
+{% block content %}
+<h1 class="mb-4">Рассылки</h1>
+<a href="{% url 'mailings:mailing_create' %}" class="btn btn-success mb-3">➕ Создать рассылку</a>
+<ul class="list-group">
+  {% for mailing in object_list %}
+    <li class="list-group-item d-flex justify-content-between align-items-center">
+      <span>Рассылка {{ mailing.id }} — {{ mailing.status }}</span>
+      <a href="{% url 'mailings:mailing_detail' mailing.pk %}" class="btn btn-sm btn-outline-primary">Подробнее</a>
+    </li>
+  {% endfor %}
+</ul>
+{% endblock %}
