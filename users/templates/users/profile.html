@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+{% block title %}Профиль{% endblock %}
+{% block content %}
+  <h2>👤 Профиль пользователя</h2>
+  <p><strong>Имя:</strong> {{ user.username }}</p>
+  <p><strong>Email:</strong> {{ user.email }}</p>
+  <p><strong>Телефон:</strong> {{ user.phone_number }}</p>
+  <p><strong>Страна:</strong> {{ user.country }}</p>
+  {% if user.avatar %}
+    <p><strong>Аватар:</strong><br><img src="{{ user.avatar.url }}" width="150"></p>
+  {% endif %}
+  <a href="{% url 'users:profile_edit' %}" class="btn btn-warning">✏️ Редактировать профиль</a>
+{% endblock %}

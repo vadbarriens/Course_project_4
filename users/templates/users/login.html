@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+{% block title %}Вход{% endblock %}
+
+{% block content %}
+<h2 class="mb-4">🔐 Вход</h2>
+
+<form method="post" novalidate>
+    {% csrf_token %}
+
+    <div class="mb-3">
+        <label for="id_username" class="form-label">Email</label>
+        {{ form.username }}
+    </div>
+
+    <div class="mb-3">
+        <label for="id_password" class="form-label">Пароль</label>
+        {{ form.password }}
+    </div>
+
+    <button type="submit" class="btn btn-success">Войти</button>
+</form>
+
+<hr>
+<a href="{% url 'users:register' %}" class="btn btn-link">Нет аккаунта? Зарегистрируйся</a>
+{% endblock %}
