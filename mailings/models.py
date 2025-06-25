@@ -42,7 +42,8 @@ class Mailing(models.Model):
         verbose_name = "Рассылка"
         verbose_name_plural = "Рассылки"
         permissions = [
-            ("can_deactivate_mailing", "can deactivate mailing"),
+            ('can_cancel_mailing', 'Can cancel mailing'),
+            ('can_see_all_mailings', 'Can see all mailings'),
         ]
 
     def __str__(self):

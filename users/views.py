@@ -1,6 +1,11 @@
 import secrets
 
+from django.contrib.auth.models import User
 from django.contrib.auth.views import LoginView, LogoutView
+from django.core.checks import messages
+from django.http import HttpRequest
+from django.shortcuts import get_object_or_404, redirect
+from django.views import View
 from django.views.generic import CreateView
 from django.core.mail import send_mail
 from django.conf import settings
@@ -68,3 +73,19 @@ class ProfileUpdateView(LoginRequiredMixin, UpdateView):
     def get_object(self):
         """Переопределение метода получения объекта"""
         return self.request.user
+
+
+class UserBlockView(View):
+    permission_required = "users.can_block_user"
+
+    def post(self, request: HttpRequest, *args: str, **kwargs):
+        user = get_object_or_404(User, email=self.kwargs.get("email"))
+        if not user.is_active:
+            user.is_active = True
+            user.save()
+            messages.success(self.request, "Пользователь успешно разблокирован!")
+        else:
+            user.is_active = False
+            user.save()
+            messages.success(self.request, "Пользователь успешно заблокирован!")
+        return redirect("users:users_list")

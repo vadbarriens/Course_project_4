@@ -1,4 +1,5 @@
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.http import HttpResponseForbidden
 from django.views.generic import (
     ListView,
     DetailView,
@@ -39,13 +40,18 @@ class MailingListView(LoginRequiredMixin, ListView):
     """Контроллер для отображения списка рассылок"""
     model = Mailing
     template_name = "mailings/mailing_list.html"
+    context_object_name = 'mailings'
 
     def get_queryset(self):
-        """Переопределение метода получения ответа """
-        user = self.request.user
-        if user.groups.filter(name="Менеджеры").exists():
+        if self.request.user.has_perm('mailings.can_see_all_mailings'):
             return Mailing.objects.all()
-        return Mailing.objects.filter(owner=user)
+        return Mailing.objects.filter(owner=self.request.user)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        is_manager = self.request.user.groups.filter(name="Manager").exists()
+        context["is_manager"] = is_manager
+        return context
 
 
 class MailingDetailView(LoginRequiredMixin, DetailView):
@@ -227,3 +233,15 @@ class MailingAttemptListView(LoginRequiredMixin, ListView):
         if user.groups.filter(name="Менеджеры").exists():
             return MailingAttempt.objects.all()
         return MailingAttempt.objects.filter(mailing__owner=user)
+
+class MailingStopView(LoginRequiredMixin, View):
+    def post(self, request, pk):
+        mailing = get_object_or_404(Mailing, pk=pk)
+        user = request.user
+        is_manager = user.groups.filter(name='Manager').exists()
+        if is_manager or user == mailing.owner:
+            mailing.status = 'CO'
+            mailing.save()
+
+            return redirect("mailings:mailing_list")
+        return HttpResponseForbidden("У вас нет прав для отключения рассылки")
