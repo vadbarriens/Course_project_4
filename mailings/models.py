@@ -1,10 +1,12 @@
-from django.db import models
-from client.models import Client
 from django.conf import settings
+from django.db import models
+
+from client.models import Client
 
 
 class Message(models.Model):
     """Модель - Сообщения"""
+
     subject = models.CharField(max_length=255)
     body = models.TextField()
     owner = models.ForeignKey(
@@ -21,6 +23,7 @@ class Message(models.Model):
 
 class Mailing(models.Model):
     """Модель - Рассылки"""
+
     STATUS_CHOICES = [
         ("Создана", "Создана"),
         ("Запущена", "Запущена"),
@@ -42,8 +45,8 @@ class Mailing(models.Model):
         verbose_name = "Рассылка"
         verbose_name_plural = "Рассылки"
         permissions = [
-            ('can_cancel_mailing', 'Can cancel mailing'),
-            ('can_see_all_mailings', 'Can see all mailings'),
+            ("can_cancel_mailing", "Can cancel mailing"),
+            ("can_see_all_mailings", "Can see all mailings"),
         ]
 
     def __str__(self):
@@ -53,6 +56,7 @@ class Mailing(models.Model):
 
 class MailingAttempt(models.Model):
     """Модель - Попытка рассылок"""
+
     STATUS_CHOICES = [
         ("Успешно", "Успешно"),
         ("Не успешно", "Не успешно"),

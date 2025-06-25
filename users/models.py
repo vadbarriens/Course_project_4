@@ -4,6 +4,7 @@ from django.db import models
 
 class CustomUser(AbstractUser):
     """Модель - пользователь"""
+
     email = models.EmailField(unique=True)
 
     USERNAME_FIELD = "email"

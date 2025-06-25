@@ -9,5 +9,6 @@ class CustomUserCreationForm(UserCreationForm):
 
     class Meta:
         """Метаданные"""
+
         model = CustomUser
         fields = ("email", "username")

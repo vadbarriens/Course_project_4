@@ -1,7 +1,7 @@
 from django.urls import path
+
 from . import views
-from .views import home_view
-from .views import MailingAttemptListView
+from .views import MailingAttemptListView, home_view
 
 app_name = "mailings"
 

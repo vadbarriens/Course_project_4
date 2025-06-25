@@ -1,11 +1,14 @@
-from django.db import models
 from django.conf import settings
+from django.db import models
 
 
 class Client(models.Model):
     """Модель - клиент"""
+
     email = models.EmailField(unique=True)
-    full_name = models.CharField(max_length=200, verbose_name='Ф.И.О.', help_text='Введите свое Ф.И.О.')
+    full_name = models.CharField(
+        max_length=200, verbose_name="Ф.И.О.", help_text="Введите свое Ф.И.О."
+    )
     comment = models.TextField()
     owner = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -15,9 +18,10 @@ class Client(models.Model):
 
     class Meta:
         """Метаданные"""
-        verbose_name = 'Клиент'
-        verbose_name_plural = 'Клиенты'
+
+        verbose_name = "Клиент"
+        verbose_name_plural = "Клиенты"
 
     def __str__(self):
         """Строковое представление клиента"""
-        return f'{self.full_name} - {self.email}'
+        return f"{self.full_name} - {self.email}"

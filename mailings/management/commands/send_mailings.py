@@ -1,11 +1,13 @@
+from django.core.mail import send_mail
 from django.core.management.base import BaseCommand
 from django.utils import timezone
-from django.core.mail import send_mail
+
 from mailings.models import Mailing, MailingAttempt
 
 
 class Command(BaseCommand):
     """Кастомная команда по отправке всех активных рассылок"""
+
     help = "Отправляет все активные рассылки"
 
     def handle(self, *args, **options):
