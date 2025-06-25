@@ -38,6 +38,13 @@ class Mailing(models.Model):
         related_name="mailings",
     )
 
+    class Meta:
+        verbose_name = "Рассылка"
+        verbose_name_plural = "Рассылки"
+        permissions = [
+            ("can_deactivate_mailing", "can deactivate mailing"),
+        ]
+
     def __str__(self):
         """Строковое представление рассылки"""
         return f"Рассылка {self.pk} ({self.status})"

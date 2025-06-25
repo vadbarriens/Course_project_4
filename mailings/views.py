@@ -64,7 +64,7 @@ class MailingDetailView(LoginRequiredMixin, DetailView):
 class MailingCreateView(LoginRequiredMixin, CreateView):
     """Контроллер для создания рассылки"""
     model = Mailing
-    fields = ["start_time", "end_time", "status", "message", "clients"]
+    fields = ["start_time", "end_time", "message", "clients"]
     template_name = "mailings/mailing_form.html"
     success_url = reverse_lazy("mailings:mailing_list")
 
@@ -73,11 +73,19 @@ class MailingCreateView(LoginRequiredMixin, CreateView):
         form.instance.owner = self.request.user
         return super().form_valid(form)
 
+    def get_form(self, form_class=None):
+        form = super().get_form(form_class)
+        for field_name in ["clients", "message"]:
+            init_qs = form.fields[field_name].queryset
+            filtered_qs = init_qs.filter(owner=self.request.user)
+            form.fields[field_name].queryset = filtered_qs
+            return form
+
 
 class MailingUpdateView(LoginRequiredMixin, UpdateView):
     """Контроллер для обновления рассылки"""
     model = Mailing
-    fields = ["start_time", "end_time", "status", "message", "clients"]
+    fields = ["start_time", "end_time", "message", "clients"]
     template_name = "mailings/mailing_form.html"
     success_url = reverse_lazy("mailings:mailing_list")
 
