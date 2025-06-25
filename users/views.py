@@ -1,3 +1,5 @@
+import secrets
+
 from django.contrib.auth.views import LoginView, LogoutView
 from django.views.generic import CreateView
 from django.core.mail import send_mail
@@ -5,6 +7,8 @@ from django.conf import settings
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import DetailView, UpdateView
 from django.urls import reverse_lazy
+
+from config.settings import EMAIL_HOST_USER
 from .models import CustomUser
 from .forms import CustomUserCreationForm
 
@@ -17,26 +21,20 @@ class RegisterView(CreateView):
     success_url = reverse_lazy("users:login")
 
     def form_valid(self, form):
-        """Переопределение метода валидации"""
-        response = super().form_valid(form)
-        print("Пробую отправить письмо на:", form.cleaned_data["email"])
-        print("SMTP USER:", repr(settings.EMAIL_HOST_USER))
-        print("SMTP PASS:", repr(settings.EMAIL_HOST_PASSWORD))
-
+        user = form.save()
+        user.is_active = False
+        token = secrets.token_hex(15)
+        user.token = token
+        user.save()
+        host = self.request.get_host()
+        url = f'http://{host}/users/email-confirm/{token}/'
         send_mail(
-            subject="🎉 Добро пожаловать в сервис рассылок!",
-            message=(
-                f"Здравствуйте, {form.cleaned_data['username']}!\n\n"
-                f"Вы успешно зарегистрировались. "
-                f"Теперь вы можете создавать клиентов, сообщения и управлять рассылками!\n\n"
-                f"Если вы не регистрировались, просто проигнорируйте это письмо.\n"
-            ),
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=[form.cleaned_data["email"]],
-            fail_silently=False,
+            subject='Подтверждение электронного адреса',
+            message=f'Спасибо за регистрацию на нашем сайте. Подтвердите адрес электронной почты, перейдя по следующей ссылке: {url}',
+            from_email=EMAIL_HOST_USER,
+            recipient_list=[user.email]
         )
-
-        return response
+        return super().form_valid(form)
 
 
 class CustomLoginView(LoginView):
