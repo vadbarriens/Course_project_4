@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+{% block title %}Профиль{% endblock %}
+{% block content %}
+<h2>👤 Профиль пользователя</h2>
+<p><strong>Email:</strong> {{ user.email }}</p>
+<p><strong>Телефон:</strong> {{ user.phone_number }}</p>
+<p><strong>Страна:</strong> {{ user.country }}</p>
+{% if user.avatar %}
+<p><strong>Аватар:</strong><br><img src="{{ user.avatar.url }}" width="150"></p>
+{% endif %}
+{% if perms.users.can_block_users %}
+<form action="{% url 'users:profile-block' user.email %}" method="post">
+    {% csrf_token %}
+    {% if user.is_active %}
+    <button type="submit" class="btn btn-outline-danger btn-sm">Заблокировать</button>
+    {% else %}
+    <button type="submit" class="btn btn-outline-primary btn-sm">Разблокировать</button>
+    {% endif %}
+</form>
+{% endif %}
+<a href="{% url 'users:profile_edit' %}" class="btn btn-warning">✏️ Редактировать профиль</a>
+{% endblock %}

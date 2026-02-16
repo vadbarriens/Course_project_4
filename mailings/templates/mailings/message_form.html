@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+{% block title %}Форма сообщения{% endblock %}
+{% block content %}
+<h2>Форма сообщения</h2>
+<form method="post" class="mt-3">
+  {% csrf_token %}
+  {{ form.as_p }}
+  <button type="submit" class="btn btn-success">💾 Сохранить</button>
+  <a href="{% url 'mailings:message_list' %}" class="btn btn-secondary">← Назад</a>
+</form>
+{% endblock %}
