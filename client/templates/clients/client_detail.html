@@ -6,8 +6,10 @@
 <p><strong>Комментарий:</strong> {{ object.comment }}</p>
 
 <div class="mt-4">
-    <a href="{% url 'client:client_update' object.pk %}" class="btn btn-warning">✏️ Редактировать</a>
-    <a href="{% url 'client:client_delete' object.pk %}" class="btn btn-danger">🗑️ Удалить</a>
+    {% if not is_manager %}
+      <a href="{% url 'client:client_update' object.pk %}" class="btn btn-warning">✏️ Редактировать</a>
+      <a href="{% url 'client:client_delete' object.pk %}" class="btn btn-danger">🗑️ Удалить</a>
+    {% endif %}
     <a href="{% url 'client:client_list' %}" class="btn btn-secondary">← Назад</a>
 </div>
 {% endblock %}

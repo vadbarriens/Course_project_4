@@ -1,21 +1,20 @@
-import secrets
-
 from django.conf import settings
-from django.contrib.auth.mixins import LoginRequiredMixin
-from django.contrib.auth.models import User
+from django.contrib import messages
+from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin, UserPassesTestMixin
 from django.contrib.auth.views import LoginView, LogoutView
-from django.core.checks import messages
 from django.core.mail import send_mail
 from django.http import HttpRequest
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse_lazy
 from django.views import View
-from django.views.generic import CreateView, DetailView, UpdateView
-
-from config.settings import EMAIL_HOST_USER
+from django.views.generic import CreateView, DetailView, ListView, UpdateView
 
 from .forms import CustomUserCreationForm
 from .models import CustomUser
+
+
+def _is_manager(user: CustomUser) -> bool:
+    return user.is_authenticated and user.groups.filter(name="Менеджеры").exists()
 
 
 class RegisterView(CreateView):
@@ -27,20 +26,22 @@ class RegisterView(CreateView):
     success_url = reverse_lazy("users:login")
 
     def form_valid(self, form):
-        user = form.save()
-        user.is_active = False
-        token = secrets.token_hex(15)
-        user.token = token
-        user.save()
-        host = self.request.get_host()
-        url = f"http://{host}/users/email-confirm/{token}/"
+        """Переопределение метода валидации"""
+        response = super().form_valid(form)
         send_mail(
-            subject="Подтверждение электронного адреса",
-            message=f"Спасибо за регистрацию на нашем сайте. Подтвердите адрес электронной почты, перейдя по следующей ссылке: {url}",
-            from_email=EMAIL_HOST_USER,
-            recipient_list=[user.email],
+            subject="🎉 Добро пожаловать в сервис рассылок!",
+            message=(
+                f"Здравствуйте!\n\n"
+                f"Вы успешно зарегистрировались. "
+                f"Теперь вы можете создавать клиентов, сообщения и управлять рассылками!\n\n"
+                f"Если вы не регистрировались, просто проигнорируйте это письмо.\n"
+            ),
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[form.cleaned_data["email"]],
+            fail_silently=False,
         )
-        return super().form_valid(form)
+
+        return response
 
 
 class CustomLoginView(LoginView):
@@ -70,7 +71,7 @@ class ProfileUpdateView(LoginRequiredMixin, UpdateView):
     """Класс для изменения профиля пользователя в системе"""
 
     model = CustomUser
-    fields = ["username", "email"]
+    fields = ["email"]
     template_name = "users/profile_form.html"
     success_url = reverse_lazy("users:profile")
 
@@ -79,17 +80,32 @@ class ProfileUpdateView(LoginRequiredMixin, UpdateView):
         return self.request.user
 
 
-class UserBlockView(View):
-    permission_required = "users.can_block_user"
+class UsersListView(PermissionRequiredMixin, ListView):
+    model = CustomUser
+    template_name = "users/users_list.html"
+    context_object_name = "users"
+    permission_required = "users.view_customuser"
+
+    def has_permission(self):
+        # список пользователей видит только менеджер (и только при наличии permission)
+        user = self.request.user
+        return _is_manager(user) and user.has_perm("users.view_customuser")
+
+
+class UserBlockView(PermissionRequiredMixin, UserPassesTestMixin, View):
+    permission_required = "users.can_block_users"
+
+    def test_func(self):
+        return _is_manager(self.request.user)
 
     def post(self, request: HttpRequest, *args: str, **kwargs):
-        user = get_object_or_404(User, email=self.kwargs.get("email"))
+        user = get_object_or_404(CustomUser, email=self.kwargs.get("email"))
         if not user.is_active:
             user.is_active = True
-            user.save()
+            user.save(update_fields=["is_active"])
             messages.success(self.request, "Пользователь успешно разблокирован!")
         else:
             user.is_active = False
-            user.save()
+            user.save(update_fields=["is_active"])
             messages.success(self.request, "Пользователь успешно заблокирован!")
         return redirect("users:users_list")

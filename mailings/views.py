@@ -1,7 +1,6 @@
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.mail import send_mail
-from django.http import HttpResponseForbidden
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse_lazy
 from django.views.decorators.cache import cache_page
@@ -10,6 +9,7 @@ from django.views.generic import (CreateView, DeleteView, DetailView, ListView,
 
 from client.models import Client
 from mailings.models import Mailing, MailingAttempt, Message
+from users.mixins import ManagerForbiddenMixin, ManagerRequiredMixin
 
 
 @cache_page(60 * 2)  # кеш на 2 минуты
@@ -44,8 +44,7 @@ class MailingListView(LoginRequiredMixin, ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        is_manager = self.request.user.groups.filter(name="Manager").exists()
-        context["is_manager"] = is_manager
+        context["is_manager"] = self.request.user.groups.filter(name="Менеджеры").exists()
         return context
 
 
@@ -63,7 +62,7 @@ class MailingDetailView(LoginRequiredMixin, DetailView):
         return Mailing.objects.filter(owner=user)
 
 
-class MailingCreateView(LoginRequiredMixin, CreateView):
+class MailingCreateView(LoginRequiredMixin, ManagerForbiddenMixin, CreateView):
     """Контроллер для создания рассылки"""
 
     model = Mailing
@@ -85,7 +84,7 @@ class MailingCreateView(LoginRequiredMixin, CreateView):
             return form
 
 
-class MailingUpdateView(LoginRequiredMixin, UpdateView):
+class MailingUpdateView(LoginRequiredMixin, ManagerForbiddenMixin, UpdateView):
     """Контроллер для обновления рассылки"""
 
     model = Mailing
@@ -98,7 +97,7 @@ class MailingUpdateView(LoginRequiredMixin, UpdateView):
         return Mailing.objects.filter(owner=self.request.user)
 
 
-class MailingDeleteView(LoginRequiredMixin, DeleteView):
+class MailingDeleteView(LoginRequiredMixin, ManagerForbiddenMixin, DeleteView):
     """Контроллер для удаления рассылки"""
 
     model = Mailing
@@ -167,11 +166,12 @@ class MessageListView(LoginRequiredMixin, ListView):
         """Переопределение метода получения ответа"""
         user = self.request.user
         if user.groups.filter(name="Менеджеры").exists():
-            return Message.objects.all()
+            # менеджер не должен видеть сообщения пользователей
+            return Message.objects.none()
         return Message.objects.filter(owner=user)
 
 
-class MessageCreateView(LoginRequiredMixin, CreateView):
+class MessageCreateView(LoginRequiredMixin, ManagerForbiddenMixin, CreateView):
     """Контроллер для создания сообщения"""
 
     model = Message
@@ -196,11 +196,11 @@ class MessageDetailView(LoginRequiredMixin, DetailView):
         """Переопределение метода получения ответа"""
         user = self.request.user
         if user.groups.filter(name="Менеджеры").exists():
-            return Message.objects.all()
+            return Message.objects.none()
         return Message.objects.filter(owner=user)
 
 
-class MessageUpdateView(LoginRequiredMixin, UpdateView):
+class MessageUpdateView(LoginRequiredMixin, ManagerForbiddenMixin, UpdateView):
     """Контроллер для обновления сообщения"""
 
     model = Message
@@ -213,7 +213,7 @@ class MessageUpdateView(LoginRequiredMixin, UpdateView):
         return Message.objects.filter(owner=self.request.user)
 
 
-class MessageDeleteView(LoginRequiredMixin, DeleteView):
+class MessageDeleteView(LoginRequiredMixin, ManagerForbiddenMixin, DeleteView):
     """Контроллер для удаления сообщения"""
 
     model = Message
@@ -240,14 +240,9 @@ class MailingAttemptListView(LoginRequiredMixin, ListView):
         return MailingAttempt.objects.filter(mailing__owner=user)
 
 
-class MailingStopView(LoginRequiredMixin, View):
+class MailingStopView(LoginRequiredMixin, ManagerRequiredMixin, View):
     def post(self, request, pk):
         mailing = get_object_or_404(Mailing, pk=pk)
-        user = request.user
-        is_manager = user.groups.filter(name="Manager").exists()
-        if is_manager or user == mailing.owner:
-            mailing.status = "CO"
-            mailing.save()
-
-            return redirect("mailings:mailing_list")
-        return HttpResponseForbidden("У вас нет прав для отключения рассылки")
+        mailing.status = "CO"
+        mailing.save()
+        return redirect("mailings:mailing_list")

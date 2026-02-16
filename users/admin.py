@@ -9,6 +9,6 @@ class CustomUserAdmin(UserAdmin):
     """Создание класса для отображения пользователя в админке"""
 
     model = CustomUser
-    list_display = ("email", "username", "is_staff", "is_superuser")
-    search_fields = ("email", "username")
+    list_display = ("email", "is_staff", "is_superuser")
+    search_fields = ("email",)
     ordering = ("email",)

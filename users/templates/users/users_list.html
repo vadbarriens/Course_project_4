@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+{% block title %}Пользователи{% endblock %}
+{% block content %}
+<h2>Пользователи</h2>
+
+<div class="list-group">
+  {% for u in users %}
+    <div class="list-group-item d-flex justify-content-between align-items-center">
+      <div>
+        <strong>{{ u.email }}</strong>
+        {% if not u.is_active %}
+          <span class="badge bg-danger ms-2">Заблокирован</span>
+        {% endif %}
+      </div>
+      <form action="{% url 'users:profile-block' u.email %}" method="post" class="m-0">
+        {% csrf_token %}
+        {% if u.is_active %}
+          <button type="submit" class="btn btn-outline-danger btn-sm">Заблокировать</button>
+        {% else %}
+          <button type="submit" class="btn btn-outline-primary btn-sm">Разблокировать</button>
+        {% endif %}
+      </form>
+    </div>
+  {% empty %}
+    <p>Пользователей нет.</p>
+  {% endfor %}
+</div>
+{% endblock %}

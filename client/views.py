@@ -4,6 +4,7 @@ from django.views.generic import (CreateView, DeleteView, DetailView, ListView,
                                   UpdateView)
 
 from .models import Client
+from users.mixins import ManagerForbiddenMixin
 
 
 class ClientListView(LoginRequiredMixin, ListView):
@@ -35,7 +36,7 @@ class ClientDetailView(LoginRequiredMixin, DetailView):
         return Client.objects.filter(owner=user)
 
 
-class ClientCreateView(LoginRequiredMixin, CreateView):
+class ClientCreateView(LoginRequiredMixin, ManagerForbiddenMixin, CreateView):
     """Контроллер для добавления клиента"""
 
     model = Client
@@ -49,7 +50,7 @@ class ClientCreateView(LoginRequiredMixin, CreateView):
         return super().form_valid(form)
 
 
-class ClientUpdateView(LoginRequiredMixin, UpdateView):
+class ClientUpdateView(LoginRequiredMixin, ManagerForbiddenMixin, UpdateView):
     """Контроллер для обновления клиента"""
 
     model = Client
@@ -62,7 +63,7 @@ class ClientUpdateView(LoginRequiredMixin, UpdateView):
         return Client.objects.filter(owner=self.request.user)
 
 
-class ClientDeleteView(LoginRequiredMixin, DeleteView):
+class ClientDeleteView(LoginRequiredMixin, ManagerForbiddenMixin, DeleteView):
     """Контроллер для удаления клиента"""
 
     model = Client

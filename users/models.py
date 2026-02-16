@@ -5,10 +5,11 @@ from django.db import models
 class CustomUser(AbstractUser):
     """Модель - пользователь"""
 
+    username = None
     email = models.EmailField(unique=True)
 
     USERNAME_FIELD = "email"
-    REQUIRED_FIELDS = ["username"]
+    REQUIRED_FIELDS = []
 
     class Meta:
         verbose_name = "Пользователь"

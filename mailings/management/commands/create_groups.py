@@ -4,6 +4,7 @@ from django.core.management.base import BaseCommand
 
 from client.models import Client
 from mailings.models import Mailing, Message
+from users.models import CustomUser
 
 
 class Command(BaseCommand):
@@ -20,7 +21,7 @@ class Command(BaseCommand):
             self.stdout.write('⚠️ Группа "Менеджеры" уже существует')
 
         # Права только на просмотр
-        models = [Mailing, Message, Client]
+        models = [Mailing, Message, Client, CustomUser]
         for model in models:
             content_type = ContentType.objects.get_for_model(model)
             view_permission = Permission.objects.get(
@@ -28,5 +29,13 @@ class Command(BaseCommand):
                 content_type=content_type,
             )
             group.permissions.add(view_permission)
+
+        # Отдельное право: блокировка пользователей
+        users_content_type = ContentType.objects.get_for_model(CustomUser)
+        block_perm = Permission.objects.get(
+            codename="can_block_users",
+            content_type=users_content_type,
+        )
+        group.permissions.add(block_perm)
 
         self.stdout.write(self.style.SUCCESS("🎉 Права добавлены"))
